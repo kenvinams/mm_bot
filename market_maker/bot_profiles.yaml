@@ -1,0 +1,77 @@
+'1':
+  exchange_bases:
+  - account:
+      api_key: wSv2lmAgNbEX0jdAnLKe7ZoiFSjg1rPv
+      secret_key: z1MMI-GKFfv1XHSYTM5HgmDi2urWimlP
+    exchange_name: FMFW
+    exchange_type: SPOT
+    pairs:
+    - base_asset: MELD
+      quote_asset: USDT
+  strategy_file: MM2
+  strategy_name: basic_market_making
+
+'2':
+  exchange_bases:
+  - account:
+      api_key: wSv2lmAgNbEX0jdAnLKe7ZoiFSjg1rPv
+      secret_key: z1MMI-GKFfv1XHSYTM5HgmDi2urWimlP
+    exchange_name: FMFW
+    exchange_type: SPOT
+    pairs:
+    - base_asset: MELD
+      quote_asset: USDT
+  strategy_file: test
+  strategy_name: market_making_ver2
+
+'3':
+  exchange_bases:
+  - account:
+      api_key: ab44d1362043304f75946f743cad3a9df5039ab5a2ec2f0dc66571d613b27a45
+      secret_key: z1MMI-329cebf218908d9adff2cd8a36654d6ed8847c417882f4b9cfe2718e4b87b97e
+    exchange_name: BITRUE
+    exchange_type: SPOT
+    pairs:
+    - base_asset: MELD
+      quote_asset: USDT
+  strategy_file: MM2
+  strategy_name: mm_test_kcl
+
+  '4':
+  exchange_bases:
+  - account:
+      api_key: 15494b0490ddb5524bb46b42a1ed5b553051d937f7e5dfbecedb3db062c7ef62
+      secret_key: a3d6af7077e613a98c51e6894cc4395218ee3909e3c49896d289ff05e6cb8486
+    exchange_name: BITRUE
+    exchange_type: SPOT
+    pairs:
+    - base_asset: MELD
+      quote_asset: USDT
+  strategy_file: MM2
+  strategy_name: mm_test_office
+
+'5':
+  exchange_bases:
+  - account:
+      api_key: 9ec9f60c139791344db38e09fef596865907babc23d16adeb7a8fb3862214493
+      secret_key: 2a10f43bf68ddb95bba73e3ccf1ea5c70607b1310bde4f92327d5f2010eee778
+    exchange_name: BITRUE
+    exchange_type: SPOT
+    pairs:
+    - base_asset: MELD
+      quote_asset: USDT
+  strategy_file: MM2
+  strategy_name: mm_all_access
+
+  '6':
+  exchange_bases:
+  - account:
+      api_key: mx0rqjD5xWCEwvkYEg
+      secret_key: 908280aece6340768365df096d350bd3
+    exchange_name: MEXC
+    exchange_type: SPOT
+    pairs:
+    - base_asset: BTC
+      quote_asset: USDT
+  strategy_file: test
+  strategy_name: mm_trung
