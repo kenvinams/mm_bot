@@ -29,7 +29,6 @@ class BITRUEConnector(BaseConnector):
 
     async def _get_inventory_balance(self):
         response = await self._curl('/api/v1/account', auth=True)
-        print(response)
         data = {}
         if len(response['balances']) > 0:
             for d in response['balances']:
