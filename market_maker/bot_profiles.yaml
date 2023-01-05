@@ -21,7 +21,7 @@
     pairs:
     - base_asset: MELD
       quote_asset: USDT
-  strategy_file: test
+  strategy_file: MM2
   strategy_name: market_making_ver2
 
 '3':
@@ -37,7 +37,7 @@
   strategy_file: MM2
   strategy_name: mm_test_kcl
 
-  '4':
+'4':
   exchange_bases:
   - account:
       api_key: 15494b0490ddb5524bb46b42a1ed5b553051d937f7e5dfbecedb3db062c7ef62
@@ -62,16 +62,3 @@
       quote_asset: USDT
   strategy_file: MM2
   strategy_name: mm_all_access
-
-  '6':
-  exchange_bases:
-  - account:
-      api_key: mx0rqjD5xWCEwvkYEg
-      secret_key: 908280aece6340768365df096d350bd3
-    exchange_name: MEXC
-    exchange_type: SPOT
-    pairs:
-    - base_asset: BTC
-      quote_asset: USDT
-  strategy_file: test
-  strategy_name: mm_trung

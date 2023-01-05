@@ -29,6 +29,7 @@ class BITRUEConnector(BaseConnector):
 
     async def _get_inventory_balance(self):
         response = await self._curl('/api/v1/account', auth=True)
+        print(response)
         data = {}
         if len(response['balances']) > 0:
             for d in response['balances']:
@@ -225,6 +226,7 @@ class BITRUEConnector(BaseConnector):
             verb = 'GET'
             headers = {}
             url = 'https://www.bitrue.com/kline-api/kline/history/' + query['symbol'] + '/market_meldusdt_kline_' + query['period']
+            
         async def retry():
             r = await self._curl(path, auth, verb, query, post_dict, attribute, retry_count + 1)
             return r
@@ -253,7 +255,8 @@ class BITRUEConnector(BaseConnector):
         except aiohttp.ClientResponseError as e:
             self.logger.info(e)
             resp_status = resp.status
-            if resp_status == 500 or resp_status == 503:
+            # if resp_status == 500 or resp_status == 503:
+            if resp_status > 200:
                 if retry_count < max_retries:
                     self.logger.warning("Service unavailable. Retrying.")
                     return await retry()

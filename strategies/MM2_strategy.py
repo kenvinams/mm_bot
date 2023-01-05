@@ -12,7 +12,3 @@ class StrategyCls(StrategyBase):
     def _run(self):
         print(self.exchange_base.inventory.get_current_balances)
         
-
-      
-        
-        

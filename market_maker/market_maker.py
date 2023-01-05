@@ -73,6 +73,7 @@ class MarketMaker:
                 pairs = []
                 exchange_type = m['exchange_type']
                 exchange_name = m['exchange_name']
+                print(exchange_name)
                 api_key = m['account']['api_key']
                 secret_key = m['account']['secret_key']
                 account = Account(api_key, secret_key)

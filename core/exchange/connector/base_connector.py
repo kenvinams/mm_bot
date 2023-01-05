@@ -152,7 +152,7 @@ class BaseConnector(ABC):
     async def _create_spot_order(self, spot_order: SpotOrder):
         pass
     
-    @abstractmethod
+    # @abstractmethod
     async def _create_spot_orders(self, spot_orders:List[SpotOrder]):
         pass
 
@@ -172,7 +172,7 @@ class BaseConnector(ABC):
     async def _get_tickers(self, symbols: List[str]):
         pass
 
-    @abstractmethod
+    # @abstractmethod
     async def _query_orders(self, spot_orders:List[SpotOrder]):
         pass
 
@@ -198,7 +198,6 @@ class BaseConnector(ABC):
         """
         pass
 
-    # UTILITY FUNCTION
     def _round_nearest(self, num, tickSize):
         """
         Round value to the nearest tick.
@@ -206,7 +205,6 @@ class BaseConnector(ABC):
         tickDec = Decimal(str(tickSize))
         return Decimal(round(num / tickSize, 0)) * tickDec
 
-    # RETREIVE DATA
     @abstractmethod
     async def _curl(self, path: str, auth: bool = False, verb: str = None,
                     query: dict = None, post_dict: dict = None, attribute: str = None, retry_count: int = 0):

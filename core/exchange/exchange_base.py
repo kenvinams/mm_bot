@@ -395,7 +395,7 @@ class SpotExchange(IExchange):
         """
         connector = BaseConnector._initialize_connector(exchange_name)
         self._connector = connector()
-        self.WS_AVAILABLE = self._connector._ws_available
+        # self.WS_AVAILABLE = self._connector._ws_available
 
     def _configure_exchange(self, exchange_name: str):
         """
