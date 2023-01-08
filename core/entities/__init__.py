@@ -8,12 +8,16 @@ from core.entities.token import Token
 from core.entities.market_info import MarketInfo
 
 __all__ = [
-    'Account',
-    'Inventory',
-    'TradeSide', 'OrderStatus', 'OrderType', 'SpotOrder',
-    'OrderBook',
-    'Pair',
-    'PriceCandles', 'Tickers',
-    'Token',
-    'MarketInfo'
+    "Account",
+    "Inventory",
+    "TradeSide",
+    "OrderStatus",
+    "OrderType",
+    "SpotOrder",
+    "OrderBook",
+    "Pair",
+    "PriceCandles",
+    "Tickers",
+    "Token",
+    "MarketInfo",
 ]

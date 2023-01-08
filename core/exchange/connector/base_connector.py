@@ -7,8 +7,11 @@ import global_settings
 from core.entities import OrderBook, SpotOrder, Account
 from core.utils import setup_custom_logger
 
+
 class MarketInfo:
-    def __init__(self, exchange: str, trading_pair: str, base_asset: str, quote_asset: str):
+    def __init__(
+        self, exchange: str, trading_pair: str, base_asset: str, quote_asset: str
+    ):
         self.EXCHANGE: str = exchange.upper()  # BITRUE, FMFW, BINANCE
         self.TRADING_PAIR: str = trading_pair.upper()
         self.BASE_ASSET: str = base_asset.upper()
@@ -17,21 +20,17 @@ class MarketInfo:
 
 class BaseConnector(ABC):
     def __init__(self):
-        # SETUP MARKET INFO: EXCHANGE, PAIR, MARKET TYPE
         self._market_info = None
         self._exchange_name: str = None
         self._symbol: str = None
         self._base_asset: str = None
         self._quote_asset: str = None
 
-        # SETUP SYSTEM PARAMETERS
         self._retries: int = global_settings.RETRY_NUM
         self._time_out: int = global_settings.TIME_OUT
 
-        # EXCHANGE PARAMETERS
-        # Some of this parameters won't be necessary in some cases
-        self._rate_limit: int = None  # Rate limit per second
-        self._order_limit: int = None  # Trading requests limit per second, all other requests = 20
+        self._rate_limit: int = None  
+        self._order_limit: int = None
         self._weight_limit: int = None
         self._tick_size: Decimal = None
         self._quote_precision: int = None
@@ -58,11 +57,11 @@ class BaseConnector(ABC):
     @property
     def trading_pairs(self):
         return self._trading_pairs
-    
+
     @property
     def pairs(self):
         return self._pairs
-    
+
     @property
     def tokens(self):
         return self._tokens
@@ -70,14 +69,18 @@ class BaseConnector(ABC):
     @classmethod
     def _initialize_connector(cls, exchange: str):
         cls_name = cls.__name__
-        if cls_name != 'BaseConnector':
+        if cls_name != "BaseConnector":
             return
         else:
             try:
-                module = importlib.import_module(f'core.exchange.connector.{exchange.upper()}_connector')
-                connector = getattr(module, f'{exchange.upper()}Connector')
+                module = importlib.import_module(
+                    f"core.exchange.connector.{exchange.upper()}_connector"
+                )
+                connector = getattr(module, f"{exchange.upper()}Connector")
             except (ImportError, AttributeError):
-                raise ValueError(f'No connector for exchange {exchange.upper()} existed.')
+                raise ValueError(
+                    f"No connector for exchange {exchange.upper()} existed."
+                )
             return connector
 
     def register_account(self, account: Account):
@@ -86,37 +89,53 @@ class BaseConnector(ABC):
     async def get_inventory_balance(self):
         res = await self._get_inventory_balance()
         if res is None or len(res) < 1:
-            self.logger.warning(f'Fail to fetch inventory balance data of symbols {",".join(self.trading_pairs)}')
+            self.logger.warning(
+                f'Fail to fetch inventory balance data of symbols {",".join(self.trading_pairs)}'
+            )
             return None
         else:
-            self.logger.info(f'Successfully fetch inventory data of symbols {",".join(self.trading_pairs)}')
+            self.logger.debug(
+                f'Successfully fetch inventory data of symbols {",".join(self.trading_pairs)}'
+            )
             return res
 
     async def get_order_book(self):
         res = await self._get_order_book()
         if res is None or len(res) < 1:
-            self.logger.warning(f'Fail to fetch orderbook data of symbols {",".join(self.trading_pairs)}')
+            self.logger.warning(
+                f'Fail to fetch orderbook data of symbols {",".join(self.trading_pairs)}'
+            )
             return None
         else:
-            self.logger.info(f'Successfully fetch orderbook data of symbols {",".join(self.trading_pairs)}')
+            self.logger.debug(
+                f'Successfully fetch orderbook data of symbols {",".join(self.trading_pairs)}'
+            )
             return res
 
-    async def get_trading_candles(self, period: str = 'M1'):
-        res =  await self._get_trading_candles(period)
+    async def get_trading_candles(self, period: str = "M1"):
+        res = await self._get_trading_candles(period)
         if res is None or len(res) < 1:
-            self.logger.warning(f'Fail to fetch candles data of symbols {",".join(self.trading_pairs)}')
+            self.logger.warning(
+                f'Fail to fetch candles data of symbols {",".join(self.trading_pairs)}'
+            )
             return None
         else:
-            self.logger.info(f'Successfully fetch candles data of symbols {",".join(self.trading_pairs)}')
+            self.logger.debug(
+                f'Successfully fetch candles data of symbols {",".join(self.trading_pairs)}'
+            )
             return res
 
     async def get_tickers(self):
         res = await self._get_tickers()
         if res is None or len(res) < 1:
-            self.logger.warning(f'Fail to fetch ticker data of symbols {",".join(self.trading_pairs)}')
+            self.logger.warning(
+                f'Fail to fetch ticker data of symbols {",".join(self.trading_pairs)}'
+            )
             return None
         else:
-            self.logger.info(f'Successfully fetch ticker data of symbols {",".join(self.trading_pairs)}')
+            self.logger.debug(
+                f'Successfully fetch ticker data of symbols {",".join(self.trading_pairs)}'
+            )
             return res
 
     async def get_active_spot_orders(self):
@@ -126,7 +145,7 @@ class BaseConnector(ABC):
         else:
             return res
 
-    async def cancel_spot_orders(self, spot_orders:List[SpotOrder]):
+    async def cancel_spot_orders(self, spot_orders: List[SpotOrder]):
         if not spot_orders:
             return []
         else:
@@ -134,26 +153,26 @@ class BaseConnector(ABC):
 
     async def create_spot_order(self, spot_order: SpotOrder):
         return await self._create_spot_order(spot_order)
-    
-    async def create_spot_orders(self, spot_orders:List[SpotOrder]):
+
+    async def create_spot_orders(self, spot_orders: List[SpotOrder]):
         if not spot_orders:
             return []
         else:
             return await self._create_spot_orders(spot_orders)
-    
-    async def query_orders(self, spot_orders:List[SpotOrder]):
+
+    async def query_orders(self, spot_orders: List[SpotOrder]):
         pass
 
     @abstractmethod
-    async def _cancel_spot_orders(self, spot_orders:List[SpotOrder]):
+    async def _cancel_spot_orders(self, spot_orders: List[SpotOrder]):
         pass
 
     @abstractmethod
     async def _create_spot_order(self, spot_order: SpotOrder):
         pass
-    
-    # @abstractmethod
-    async def _create_spot_orders(self, spot_orders:List[SpotOrder]):
+
+    @abstractmethod
+    async def _create_spot_orders(self, spot_orders: List[SpotOrder]):
         pass
 
     @abstractmethod
@@ -165,7 +184,7 @@ class BaseConnector(ABC):
         pass
 
     @abstractmethod
-    async def _get_trading_candles(self, symbols: List[str], period: str = 'M1'):
+    async def _get_trading_candles(self, symbols: List[str], period: str = "M1"):
         pass
 
     @abstractmethod
@@ -173,7 +192,7 @@ class BaseConnector(ABC):
         pass
 
     # @abstractmethod
-    async def _query_orders(self, spot_orders:List[SpotOrder]):
+    async def _query_orders(self, spot_orders: List[SpotOrder]):
         pass
 
     @abstractmethod
@@ -206,6 +225,14 @@ class BaseConnector(ABC):
         return Decimal(round(num / tickSize, 0)) * tickDec
 
     @abstractmethod
-    async def _curl(self, path: str, auth: bool = False, verb: str = None,
-                    query: dict = None, post_dict: dict = None, attribute: str = None, retry_count: int = 0):
+    async def _curl(
+        self,
+        path: str,
+        auth: bool = False,
+        verb: str = None,
+        query: dict = None,
+        post_dict: dict = None,
+        attribute: str = None,
+        retry_count: int = 0,
+    ):
         pass

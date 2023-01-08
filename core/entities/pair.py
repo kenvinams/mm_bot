@@ -5,12 +5,9 @@ from core.entities.price_state import PriceCandles, Tickers
 from core.entities.token import Token
 import global_settings
 
-class Pair:
 
-    def __init__(self,
-                 base: Token,
-                 quote: Token,
-                 symbol: str = None):
+class Pair:
+    def __init__(self, base: Token, quote: Token, symbol: str = None):
         self._base_asset = base
         self._quote_asset = quote
         if not symbol:
@@ -53,15 +50,15 @@ class Pair:
     @property
     def tick_size(self):
         return self._tick_size
-    
+
     @tick_size.setter
     def tick_size(self, val):
         self._tick_size = val
-    
+
     @property
     def quantity_increment(self):
         return self._quantity_increment
-    
+
     @quantity_increment.setter
     def quantity_increment(self, val):
         self._quantity_increment = val

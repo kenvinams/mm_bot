@@ -12,8 +12,6 @@ class StrategyBase(metaclass=ABCMeta):
         if len(self.exchange_bases) < 2:
             self.exchange_base: SpotExchange = exchange_bases[0]
 
-        # Work on single exchange first
-
     @classmethod
     def initialize_strategy(cls, strategy_name: str):
         cls_name = cls.__name__

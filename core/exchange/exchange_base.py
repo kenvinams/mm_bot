@@ -6,7 +6,15 @@ import json
 from typing import List
 import time
 
-from core.entities import Account, Pair, MarketInfo, SpotOrder, Inventory,TradeSide, OrderStatus
+from core.entities import (
+    Account,
+    Pair,
+    MarketInfo,
+    SpotOrder,
+    Inventory,
+    TradeSide,
+    OrderStatus,
+)
 from core import utils
 from core.exchange.order_manger import OrderManager
 from core.exchange.connector import BaseConnector
@@ -24,13 +32,13 @@ class BasicStatus(IntEnum):
 
 
 class ProcessingStatus(Enum):
-    INITIALIZING = 'INITIALIZING'
-    PROCESSED = 'PROCESSED'
-    PROCESSING = 'PROCESSING'
-    PROCESSED_ERROR = 'PROCESSED_ERROR'
+    INITIALIZING = "INITIALIZING"
+    PROCESSED = "PROCESSED"
+    PROCESSING = "PROCESSING"
+    PROCESSED_ERROR = "PROCESSED_ERROR"
+
 
 class IExchange(metaclass=ABCMeta):
-
     def __init__(self, market_info: MarketInfo):
         # SETUP MARKET INFO TO INITIALIZE EXCHANGE
         self._market_info = market_info
@@ -43,26 +51,22 @@ class IExchange(metaclass=ABCMeta):
         # Others
         self.logger = utils.setup_custom_logger(__name__)
         self._exchange_start_time = time.perf_counter()
-        self.WS_AVAILABLE = False # If websocket is available on exchange
-        self.READ_ONLY = False # Only streaming data from exchange
+        self.WS_AVAILABLE = False
+        self.READ_ONLY = False 
         self._pairs: List[Pair] = []
         self._trading_pairs: List = []
         self._active_spot_orders: List[SpotOrder] = []
         self._inventory: Inventory = None
-        self._tokens = [] # List of token symbols
-        self._api_key = None # Api key
-        self._secret_key = None # Secret key
-        self._session = None # Aiohttp session
-        self._request_error_count = 0
+        self._tokens = [] 
+        self._api_key = None
+        self._secret_key = None
+        self._session = None
         self._start_time = time.perf_counter()
-        self._time_passed = None # Time has passed, in seconds.
-        self._error_count = 0 # Error counter for handling requests error.
-        self._loop_start_time = None # Start time of each loop interval, use time perfcounter.
-        # If only one pair
+        self._time_passed = None 
+        self._loop_start_time = None 
         self._pair = None
         self._trading_pair = None
 
-        # Tasks list
         self._fetch_data_tasks = []
         self._additional_fetch_tasks = []
         self._action_process_tasks = []
@@ -70,21 +74,17 @@ class IExchange(metaclass=ABCMeta):
         self._cancel_all_orders = False
         self._cancel_orders = []
 
-        # Process status
-        self.MARKET_READY = MarketStatus.NOT_READY  # Initialize basic market data to be ready.
-        self.FETCH_DATA_STATUS = ProcessingStatus.PROCESSING  # Fetching data status.
+        self.MARKET_READY = MarketStatus.NOT_READY
+        self.FETCH_DATA_STATUS = ProcessingStatus.PROCESSING
         self.STRATEGY_CALCULATION_STATUS = ProcessingStatus.PROCESSING
         self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
         self.HANDLE_UNFINISHED_TASKS = ProcessingStatus.PROCESSED
-        self.PROCESS_ACTION_STATUS = ProcessingStatus.INITIALIZING  # Process strategy request status.
+        self.PROCESS_ACTION_STATUS = ProcessingStatus.INITIALIZING
         self.MAIN_PROCESS_STATUS = ProcessingStatus.INITIALIZING
-
-        # Enable loop
         self.EXCHANGE_ENABLED = True
 
 
 class SpotExchange(IExchange):
-
     def __init__(self, market_info: MarketInfo):
         super().__init__(market_info)
         self._initialize(market_info)
@@ -125,7 +125,7 @@ class SpotExchange(IExchange):
     @property
     def trading_pair(self):
         return self._trading_pair
-    
+
     @property
     def OrderManager(self):
         return self._order_manager
@@ -133,19 +133,21 @@ class SpotExchange(IExchange):
     async def run(self):
         await self._run()
 
-    def change_strategy_status(self, status: ProcessingStatus = ProcessingStatus.PROCESSED):
+    def change_strategy_status(
+        self, status: ProcessingStatus = ProcessingStatus.PROCESSED
+    ):
         self.STRATEGY_CALCULATION_STATUS = status
 
     def close(self):
         self.EXCHANGE_ENABLED = False
-        self.logger.info(f'Exit exchange {self._exchange_name}...')
+        self.logger.info(f"Exit exchange {self._exchange_name}...")
 
-    def cancel_spot_orders(self, spot_orders:List[SpotOrder]):
+    def cancel_spot_orders(self, spot_orders: List[SpotOrder]):
         self.OrderManager._add_cancel_orders(spot_orders)
 
     def cancel_all_spot_orders(self):
         self.OrderManager._cancel_all_orders()
-        self.logger.info('Cancel all spot orders.')
+        self.logger.info("Cancel all spot orders.")
 
     def create_spot_order(self, spot_order: SpotOrder):
         """
@@ -162,21 +164,31 @@ class SpotExchange(IExchange):
         spot_order.order_id = self.OrderManager._create_id()
         if spot_order.side == TradeSide.BUY:
             if float(volume * price) * global_settings.BUFFER_ORDER_QUANTITY >= float(
-                    self.inventory.get_single_balance(quote_asset)):
-                self.logger.error(f'Buy order quantity larger than current inventory: Order amount: '
-                                    f'{float(volume * price) * global_settings.BUFFER_ORDER_QUANTITY:.2f} while '
-                                    f'current {quote_asset} balance is {float(self.inventory.get_single_balance(quote_asset)):.2f}')
+                self.inventory.get_single_balance(quote_asset)
+            ):
+                self.logger.error(
+                    f"Buy order quantity larger than current inventory: Order amount: "
+                    f"{float(volume * price) * global_settings.BUFFER_ORDER_QUANTITY:.2f} while "
+                    f"current {quote_asset} balance is {float(self.inventory.get_single_balance(quote_asset)):.2f}"
+                )
                 return False
         else:
-            if float(volume) > float(
-                    self.inventory.get_single_balance(base_asset)) * global_settings.BUFFER_ORDER_QUANTITY:
-                self.logger.error(f'Sell order quantity larger than current inventory: Order amount: '
-                                    f'{volume} while '
-                                    f'current {base_asset} balance is {float(self.inventory.get_single_balance(base_asset)):.2f}')
+            if (
+                float(volume)
+                > float(self.inventory.get_single_balance(base_asset))
+                * global_settings.BUFFER_ORDER_QUANTITY
+            ):
+                self.logger.error(
+                    f"Sell order quantity larger than current inventory: Order amount: "
+                    f"{volume} while "
+                    f"current {base_asset} balance is {float(self.inventory.get_single_balance(base_asset)):.2f}"
+                )
                 return False
 
-        self.logger.info(f'Posting a {spot_order.side} {spot_order.order_type} '
-                         f'order of pair {pair.trading_pair} with volume {spot_order.quantity} and price {spot_order.price}')
+        self.logger.info(
+            f"Posting a {spot_order.side} {spot_order.order_type} "
+            f"order of pair {pair.trading_pair} with volume {spot_order.quantity} and price {spot_order.price}"
+        )
         self.OrderManager._add_post_orders([spot_order])
 
     def create_spot_orders(self, spot_orders: List[SpotOrder]):
@@ -187,7 +199,9 @@ class SpotExchange(IExchange):
         :return: List of spot orders created.
         """
         # This will be written in numpy later to improve performance.
-        self.logger.info(f'Try to create multiple orders on {self.exchange_name} Exchange.')
+        self.logger.info(
+            f"Try to create multiple orders on {self.exchange_name} Exchange."
+        )
         list_trading_pairs = []
         for spot_order in spot_orders:
             p = spot_order.pair
@@ -207,18 +221,32 @@ class SpotExchange(IExchange):
                     else:
                         sum_sell += spot_order.quantity
 
-            if float(sum_buy) * global_settings.BUFFER_ORDER_QUANTITY >= self.inventory.get_single_balance(p[1]):
-                self.logger.error(f'Buy order quantity for pair {p[0] + p[1]} larger than current inventory. '
-                                  f'Buy volume: {float(sum_buy) * global_settings.BUFFER_ORDER_QUANTITY}')
+            if float(
+                sum_buy
+            ) * global_settings.BUFFER_ORDER_QUANTITY >= self.inventory.get_single_balance(
+                p[1]
+            ):
+                self.logger.error(
+                    f"Buy order quantity for pair {p[0] + p[1]} larger than current inventory. "
+                    f"Buy volume: {float(sum_buy) * global_settings.BUFFER_ORDER_QUANTITY}"
+                )
                 return False
-            if float(sum_sell) > global_settings.BUFFER_ORDER_QUANTITY * self.inventory.get_single_balance(p[0]):
-                self.logger.error(f'Sell order quantity for pair {p[0] + p[1]} larger than current inventory. '
-                                  f'Sell volume: {sum_sell}')
+            if float(
+                sum_sell
+            ) > global_settings.BUFFER_ORDER_QUANTITY * self.inventory.get_single_balance(
+                p[0]
+            ):
+                self.logger.error(
+                    f"Sell order quantity for pair {p[0] + p[1]} larger than current inventory. "
+                    f"Sell volume: {sum_sell}"
+                )
                 return False
 
         for spot_order in spot_orders:
-            self.logger.info(f'Posting a {spot_order.side} {spot_order.order_type} '
-                         f'order of pair {spot_order.pair.trading_pair} with volume {spot_order.quantity} and price {spot_order.price}')
+            self.logger.info(
+                f"Posting a {spot_order.side} {spot_order.order_type} "
+                f"order of pair {spot_order.pair.trading_pair} with volume {spot_order.quantity} and price {spot_order.price}"
+            )
         self.OrderManager._add_post_orders(spot_orders)
 
     async def _run(self):
@@ -228,13 +256,15 @@ class SpotExchange(IExchange):
                 st_time = time.perf_counter()
                 loop_sleep = asyncio.create_task(self._loop_interval())
                 task_fetch_data = asyncio.create_task(self._fetch_data_process())
-                task_process_action = asyncio.create_task(self._handle_strategy_action())
+                task_process_action = asyncio.create_task(
+                    self._handle_strategy_action()
+                )
                 tasks.append(loop_sleep)
                 tasks.append(task_fetch_data)
                 tasks.append(task_process_action)
                 await asyncio.gather(*tasks)
                 self._time_passed = time.perf_counter() - self._start_time
-                print(f'Time passed: {time.perf_counter() - st_time:.2f}s')
+                print(f"Time passed: {time.perf_counter() - st_time:.2f}s")
 
     async def _handle_strategy_action(self):
         while self.MAIN_PROCESS_STATUS == ProcessingStatus.PROCESSING:
@@ -243,21 +273,31 @@ class SpotExchange(IExchange):
                 if self.FETCH_DATA_STATUS == ProcessingStatus.PROCESSED:
                     self.READY_FOR_STRATEGY = BasicStatus.READY
                     if self.STRATEGY_CALCULATION_STATUS == ProcessingStatus.PROCESSED:
-                        if (len(self.OrderManager._initialized_orders) < 1) and (len(self.OrderManager._cancelled_orders_list) < 1):
+                        if (len(self.OrderManager._initialized_orders) < 1) and (
+                            len(self.OrderManager._cancelled_orders_list) < 1
+                        ):
                             self.PROCESS_ACTION_STATUS = ProcessingStatus.PROCESSED
                             self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
                             return True
                         else:
                             self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
                             tasks = []
-                            task = asyncio.create_task(self._connector.cancel_spot_orders(self.OrderManager._cancelled_orders_list))
+                            task = asyncio.create_task(
+                                self._connector.cancel_spot_orders(
+                                    self.OrderManager._cancelled_orders_list
+                                )
+                            )
                             tasks.append(task)
-                            task = asyncio.create_task(self._connector.create_spot_orders(self.OrderManager._initialized_orders))
+                            task = asyncio.create_task(
+                                self._connector.create_spot_orders(
+                                    self.OrderManager._initialized_orders
+                                )
+                            )
                             tasks.append(task)
                             orders_cancelled = await tasks[0]
                             orders_post = await tasks[1]
-                            self.OrderManager._cancelling_orders() # Transfer cancelling orders
-                            self.OrderManager._posting_orders()    # Transfer posting orders
+                            self.OrderManager._cancelling_orders()  # Transfer cancelling orders
+                            self.OrderManager._posting_orders()  # Transfer posting orders
                             self.OrderManager._cancelled_orders(orders_cancelled)
                             self.OrderManager._posted_orders(orders_post)
                             return True
@@ -291,19 +331,21 @@ class SpotExchange(IExchange):
             tickers_res = await tasks[3]
             active_orders_res = await tasks[4]
             if tickers_res is None:
-                self.logger.warning('Market not ready, no tickers data. Retrying...')
+                self.logger.warning("Market not ready, no tickers data. Retrying...")
                 return False
             if candles_res is None:
-                self.logger.warning('Market not ready, no candles data. Retrying...')
+                self.logger.warning("Market not ready, no candles data. Retrying...")
                 return False
             if orderbook_res is None:
-                self.logger.warning('Market not ready, no orderbook data. Retrying...')
+                self.logger.warning("Market not ready, no orderbook data. Retrying...")
                 return False
             if inventory_res is None:
-                self.logger.warning('Market not ready, no inventory data. Retrying...')
+                self.logger.warning("Market not ready, no inventory data. Retrying...")
                 return False
             if active_orders_res is None:
-                self.logger.warning('Market not ready, no active orders data. Retrying...')
+                self.logger.warning(
+                    "Market not ready, no active orders data. Retrying..."
+                )
                 return False
             # Set maker and taker rates, orderbooks, trading candles, tickers.
             for pair in self._pairs:
@@ -315,7 +357,7 @@ class SpotExchange(IExchange):
             # Update active orders
             self.OrderManager._insert_active_orders(active_orders_res)
             self.MARKET_READY = MarketStatus.READY
-            self.logger.info(f'Exchange {self.exchange_name} ready.')
+            self.logger.info(f"Exchange {self.exchange_name} ready.")
             self.FETCH_DATA_STATUS = ProcessingStatus.PROCESSED
             return True
         else:
@@ -327,7 +369,9 @@ class SpotExchange(IExchange):
             tasks.append(task)
             task = asyncio.create_task(self._connector.get_tickers())
             tasks.append(task)
-            task = asyncio.create_task(self._connector.query_orders(self.OrderManager._tracked_orders))
+            task = asyncio.create_task(
+                self._connector.query_orders(self.OrderManager._tracked_orders)
+            )
             tasks.append(task)
 
             inventory_res = await tasks[0]
@@ -337,28 +381,28 @@ class SpotExchange(IExchange):
             tracked_orders_res = await tasks[4]
 
             if inventory_res is None:
-                self.logger.warning('Market not ready, no inventory data. Retrying...')
+                self.logger.warning("Market not ready, no inventory data. Retrying...")
                 return False
             else:
                 self._inventory.update_inventory(inventory_res)
-            
+
             if len(orderbook_res) > 0:
                 for pair in self._pairs:
                     pair._add_orderbook(orderbook_res.get(pair.trading_pair))
             else:
-                self.logger.warning('No data for orderbook.')
-            
+                self.logger.warning("No data for orderbook.")
+
             if len(candles_res) > 0:
                 for pair in self._pairs:
                     pair._add_trading_candles(candles_res.get(pair.trading_pair))
             else:
-                self.logger.warning('No data for candles.')
-            
+                self.logger.warning("No data for candles.")
+
             if len(tickers_res) > 0:
                 for pair in self._pairs:
                     pair._add_tickers(tickers_res.get(pair.trading_pair))
             else:
-                self.logger.warning('No data for tickers.')
+                self.logger.warning("No data for tickers.")
             self.OrderManager._update_state(tracked_orders_res)
 
             self.FETCH_DATA_STATUS = ProcessingStatus.PROCESSED
@@ -366,13 +410,13 @@ class SpotExchange(IExchange):
 
     async def _loop_interval(self):
         self._loop_start_time = time.perf_counter()
-        self.logger.info('Start new loop')
+        self.logger.debug("Start new loop")
         self.MAIN_PROCESS_STATUS = ProcessingStatus.PROCESSING
         self.STRATEGY_CALCULATION_STATUS = ProcessingStatus.PROCESSING
         self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
         await asyncio.sleep(global_settings.LOOP_INTERVAL)
         self.MAIN_PROCESS_STATUS = ProcessingStatus.PROCESSED
-        self.logger.info('End loop')
+        self.logger.debug("End loop")
         return 1
 
     def _initialize(self, market_info: MarketInfo):
@@ -402,13 +446,13 @@ class SpotExchange(IExchange):
 
         :param exchange_name: exchange name
         """
-        with open(f'core/exchange/config/{exchange_name}_settings.json') as f:
+        with open(f"core/exchange/config/{exchange_name}_settings.json") as f:
             data = json.load(f)
         for p in self.pairs:
             d = data[p.trading_pair]
-            p._set_rate((float(d['take_rate']), float(d['make_rate'])))
-            p.quantity_increment = float(d['quantity_increment'])
-            p.tick_size = float(d['tick_size'])
+            p._set_rate((float(d["take_rate"]), float(d["make_rate"])))
+            p.quantity_increment = float(d["quantity_increment"])
+            p.tick_size = float(d["tick_size"])
 
     def _subscribe_pair(self, pairs: List[Pair]):
         """Add pairs (cls) and trading_pairs.

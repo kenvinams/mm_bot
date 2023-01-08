@@ -210,7 +210,6 @@ class BITRUEConnector(BaseConnector):
             if not verb:
                 verb = 'GET'
             headers = {'X-MBX-APIKEY': self._api_key}
-            max_retries = self._retries
             timestamp = int(dt.datetime.now().timestamp()*1000)
             url = self._api_endpoint + path
             rcv_window = 10000
@@ -256,7 +255,7 @@ class BITRUEConnector(BaseConnector):
             resp_status = resp.status
             # if resp_status == 500 or resp_status == 503:
             if resp_status > 200:
-                if retry_count < max_retries:
+                if retry_count < self._retries:
                     self.logger.warning("Service unavailable. Retrying.")
                     return await retry()
                 else:

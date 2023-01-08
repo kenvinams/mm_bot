@@ -17,4 +17,3 @@ class OrderPool:
 
     def _register_exchange(self):
         self._orders = {exchange_base.exchange_name: exchange_base._orders for exchange_base in self._exchange_bases}
-
