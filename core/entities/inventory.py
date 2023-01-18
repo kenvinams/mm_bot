@@ -13,17 +13,20 @@ class dotdict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+class SubInventory:
+    def __init__(self, token: str):
+        pass
 
 class Inventory:
     def __init__(self, tokens: List[str]):
         self._tokens = tokens
         self.max_length = global_settings.DATA_MAX_LENGTH
-        self._current_token_balance = {token: 0 for token in tokens}
+        self._current_token_balance = {token: dotdict({'free':0, 'used':0, 'total':0}) for token in tokens}
         self._all_token_balance: List = []
 
     def update_inventory(self, inventory: dict):
         for token in self._tokens:
-            self._current_token_balance[token] = inventory.get(token, 0)
+            self._current_token_balance[token] = dotdict(inventory.get(token))
             if len(self._all_token_balance) < self.max_length:
                 self._all_token_balance.append(
                     [

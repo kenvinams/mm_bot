@@ -1,6 +1,7 @@
 from abc import ABCMeta
 from aiohttp import ClientSession
 import asyncio
+import ccxt.async_support as ccxt
 from enum import Enum, IntEnum
 import json
 from typing import List
@@ -17,7 +18,6 @@ from core.entities import (
 )
 from core import utils
 from core.exchange.order_manger import OrderManager
-from core.exchange.connector import BaseConnector
 import global_settings
 
 
@@ -45,14 +45,13 @@ class IExchange(metaclass=ABCMeta):
 
         # EXCHANGE ATTRIBUTES
         self._exchange_name = None
-        self._connector: BaseConnector = None
-        self._account: Account = None
+        self.account: Account = None
+        self._exchange_interface = None
 
         # Others
         self.logger = utils.setup_custom_logger(__name__)
         self._exchange_start_time = time.perf_counter()
         self.WS_AVAILABLE = False
-        self.READ_ONLY = False 
         self._pairs: List[Pair] = []
         self._trading_pairs: List = []
         self._active_spot_orders: List[SpotOrder] = []
@@ -127,7 +126,7 @@ class SpotExchange(IExchange):
         return self._trading_pair
 
     @property
-    def OrderManager(self):
+    def order_manager(self):
         return self._order_manager
 
     async def run(self):
@@ -143,10 +142,10 @@ class SpotExchange(IExchange):
         self.logger.info(f"Exit exchange {self._exchange_name}...")
 
     def cancel_spot_orders(self, spot_orders: List[SpotOrder]):
-        self.OrderManager._add_cancel_orders(spot_orders)
+        self.order_manager._add_cancel_orders(spot_orders)
 
     def cancel_all_spot_orders(self):
-        self.OrderManager._cancel_all_orders()
+        self.order_manager._cancel_all_orders()
         self.logger.info("Cancel all spot orders.")
 
     def create_spot_order(self, spot_order: SpotOrder):
@@ -161,7 +160,7 @@ class SpotExchange(IExchange):
         volume = spot_order.quantity
         price = spot_order.price
         spot_order.status = OrderStatus.NEW
-        spot_order.order_id = self.OrderManager._create_id()
+        spot_order.order_id = self.order_manager._create_id()
         if spot_order.side == TradeSide.BUY:
             if float(volume * price) * global_settings.BUFFER_ORDER_QUANTITY >= float(
                 self.inventory.get_single_balance(quote_asset)
@@ -189,7 +188,7 @@ class SpotExchange(IExchange):
             f"Posting a {spot_order.side} {spot_order.order_type} "
             f"order of pair {pair.trading_pair} with volume {spot_order.quantity} and price {spot_order.price}"
         )
-        self.OrderManager._add_post_orders([spot_order])
+        self.order_manager._add_post_orders([spot_order])
 
     def create_spot_orders(self, spot_orders: List[SpotOrder]):
         """
@@ -208,7 +207,7 @@ class SpotExchange(IExchange):
             b = p.base_asset
             q = p.quote_asset
             list_trading_pairs.append((b, q))
-            spot_order.order_id = self.OrderManager._create_id()
+            spot_order.order_id = self.order_manager._create_id()
             spot_order.status = OrderStatus.NEW
         trading_pairs = list(set(list_trading_pairs))
         for p in trading_pairs:
@@ -247,69 +246,35 @@ class SpotExchange(IExchange):
                 f"Posting a {spot_order.side} {spot_order.order_type} "
                 f"order of pair {spot_order.pair.trading_pair} with volume {spot_order.quantity} and price {spot_order.price}"
             )
-        self.OrderManager._add_post_orders(spot_orders)
+        self.order_manager._add_post_orders(spot_orders)
 
     async def _run(self):
-        async with ClientSession() as self._connector._session:
-            while self.EXCHANGE_ENABLED:
-                tasks = []
-                st_time = time.perf_counter()
-                loop_sleep = asyncio.create_task(self._loop_interval())
-                task_fetch_data = asyncio.create_task(self._fetch_data_process())
-                task_process_action = asyncio.create_task(
-                    self._handle_strategy_action()
-                )
-                tasks.append(loop_sleep)
-                tasks.append(task_fetch_data)
-                tasks.append(task_process_action)
-                await asyncio.gather(*tasks)
-                self._time_passed = time.perf_counter() - self._start_time
-                print(f"Time passed: {time.perf_counter() - st_time:.2f}s")
+        tasks = []
+        st_time = time.perf_counter()
+        loop_sleep = asyncio.create_task(self._loop_interval())
+        task_fetch_data = asyncio.create_task(self._fetch_data_process())
+        task_process_action = asyncio.create_task(
+            self._handle_strategy_action()
+        )
+        tasks.append(loop_sleep)
+        tasks.append(task_fetch_data)
+        tasks.append(task_process_action)
+        await asyncio.gather(*tasks)
+        self._time_passed = time.perf_counter() - self._start_time
+        print(f"Time passed: {time.perf_counter() - st_time:.2f}s")
 
-    async def _handle_strategy_action(self):
-        while self.MAIN_PROCESS_STATUS == ProcessingStatus.PROCESSING:
-            await asyncio.sleep(0.001)
-            if self.MARKET_READY:
-                if self.FETCH_DATA_STATUS == ProcessingStatus.PROCESSED:
-                    self.READY_FOR_STRATEGY = BasicStatus.READY
-                    if self.STRATEGY_CALCULATION_STATUS == ProcessingStatus.PROCESSED:
-                        if (len(self.OrderManager._initialized_orders) < 1) and (
-                            len(self.OrderManager._cancelled_orders_list) < 1
-                        ):
-                            self.PROCESS_ACTION_STATUS = ProcessingStatus.PROCESSED
-                            self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
-                            return True
-                        else:
-                            self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
-                            tasks = []
-                            task = asyncio.create_task(
-                                self._connector.cancel_spot_orders(
-                                    self.OrderManager._cancelled_orders_list
-                                )
-                            )
-                            tasks.append(task)
-                            task = asyncio.create_task(
-                                self._connector.create_spot_orders(
-                                    self.OrderManager._initialized_orders
-                                )
-                            )
-                            tasks.append(task)
-                            orders_cancelled = await tasks[0]
-                            orders_post = await tasks[1]
-                            self.OrderManager._cancelling_orders()  # Transfer cancelling orders
-                            self.OrderManager._posting_orders()  # Transfer posting orders
-                            self.OrderManager._cancelled_orders(orders_cancelled)
-                            self.OrderManager._posted_orders(orders_post)
-                            return True
-                    else:
-                        self.PROCESS_ACTION_STATUS = ProcessingStatus.PROCESSING
-                elif self.FETCH_DATA_STATUS == ProcessingStatus.PROCESSING:
-                    self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
-                    self.PROCESS_ACTION_STATUS = ProcessingStatus.PROCESSING
-                else:
-                    self.READY_FOR_STRATEGY = BasicStatus.NOT_READY
-                    self.PROCESS_ACTION_STATUS = ProcessingStatus.PROCESSING
-                    return False
+    
+    async def close(self):
+        self.logger.info(f'Exiting {self._exchange_interface.id}')
+
+    async def _get_inventory_balance(self):
+        try:
+            response = await self._exchange_interface.fetchBalance()
+            return response
+        except ccxt.NetworkError as e:
+            self.logger.error(f'{self._exchange_interface.id }fetch_order_book failed due to a network error: {str(e)}')
+
+
 
     async def _fetch_data_process(self):
         tasks = []
@@ -355,7 +320,7 @@ class SpotExchange(IExchange):
             # Update inventory
             self._inventory.update_inventory(inventory_res)
             # Update active orders
-            self.OrderManager._insert_active_orders(active_orders_res)
+            self.order_manager._insert_active_orders(active_orders_res)
             self.MARKET_READY = MarketStatus.READY
             self.logger.info(f"Exchange {self.exchange_name} ready.")
             self.FETCH_DATA_STATUS = ProcessingStatus.PROCESSED
@@ -370,7 +335,7 @@ class SpotExchange(IExchange):
             task = asyncio.create_task(self._connector.get_tickers())
             tasks.append(task)
             task = asyncio.create_task(
-                self._connector.query_orders(self.OrderManager._tracked_orders)
+                self._connector.query_orders(self.order_manager._tracked_orders)
             )
             tasks.append(task)
 
@@ -403,7 +368,7 @@ class SpotExchange(IExchange):
                     pair._add_tickers(tickers_res.get(pair.trading_pair))
             else:
                 self.logger.warning("No data for tickers.")
-            self.OrderManager._update_state(tracked_orders_res)
+            self.order_manager._update_state(tracked_orders_res)
 
             self.FETCH_DATA_STATUS = ProcessingStatus.PROCESSED
             return True
@@ -426,33 +391,24 @@ class SpotExchange(IExchange):
             market_info (MarketInfo): market info.
         """
         self._exchange_name = market_info.exchange
-        self._init_connector(market_info.exchange)
-        self._subscribe_pair(market_info.pairs)
+        exchange_class = getattr(ccxt, self._exchange_name)
         self._register_account(market_info.account)
-        self._configure_exchange(self._exchange_name)
+        self._exchange_interface = exchange_class({
+            'apiKey': self.account.api_key,
+            'secret': self.account.secret_key,})
+        self._subscribe_pair(market_info.pairs)
+        # self._configure_exchange(self._exchange_name)
 
-    def _init_connector(self, exchange_name: str):
-        """Initialize BaseConnector.
+    # def _configure_exchange(self):
+    #     """
 
-        Args:
-            exchange_name (str): name of exchange.
-        """
-        connector = BaseConnector._initialize_connector(exchange_name)
-        self._connector = connector()
-        # self.WS_AVAILABLE = self._connector._ws_available
-
-    def _configure_exchange(self, exchange_name: str):
-        """
-
-        :param exchange_name: exchange name
-        """
-        with open(f"core/exchange/config/{exchange_name}_settings.json") as f:
-            data = json.load(f)
-        for p in self.pairs:
-            d = data[p.trading_pair]
-            p._set_rate((float(d["take_rate"]), float(d["make_rate"])))
-            p.quantity_increment = float(d["quantity_increment"])
-            p.tick_size = float(d["tick_size"])
+    #     :param exchange_name: exchange name
+    #     """
+    #     for p in self.pairs:
+    #         d = data[p.trading_pair]
+    #         p._set_rate((float(d["take_rate"]), float(d["make_rate"])))
+    #         p.quantity_increment = float(d["quantity_increment"])
+    #         p.tick_size = float(d["tick_size"])
 
     def _subscribe_pair(self, pairs: List[Pair]):
         """Add pairs (cls) and trading_pairs.
@@ -471,9 +427,6 @@ class SpotExchange(IExchange):
         if len(self._pairs) < 2:
             self._pair = self._pairs[0]
             self._trading_pair = self._trading_pairs[0]
-        self._connector._pairs = self._pairs
-        self._connector._trading_pairs = self._trading_pairs
-        self._connector._tokens = self._tokens
 
     def _register_account(self, account: Account):
         """Register exchange account information.
@@ -481,9 +434,9 @@ class SpotExchange(IExchange):
         Args:
             account (Account): Account.
         """
-        self._account = account
+        self.account = account
         self._api_key, self._secret_key = account.get_login_info()
-        self._connector.register_account(account)
+
 
     def _login_information(self):
         """Get login information.
