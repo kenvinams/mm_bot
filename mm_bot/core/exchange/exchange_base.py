@@ -1,5 +1,4 @@
 from abc import ABCMeta
-from aiohttp import ClientSession
 import asyncio
 import ccxt.async_support as ccxt
 from enum import Enum, IntEnum
@@ -18,7 +17,7 @@ from core.entities import (
 )
 from core import utils
 from core.exchange.order_manger import OrderManager
-import global_settings
+import mm_bot.global_settings as global_settings
 
 
 class MarketStatus(IntEnum):

@@ -1,5 +1,5 @@
 import logging
-import global_settings
+import mm_bot.global_settings as global_settings
 
 loggers = {}
 

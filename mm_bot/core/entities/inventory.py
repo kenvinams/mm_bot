@@ -1,7 +1,7 @@
 import datetime as dt
 from typing import List
 
-import global_settings
+import mm_bot.global_settings as global_settings
 
 
 class dotdict(dict):

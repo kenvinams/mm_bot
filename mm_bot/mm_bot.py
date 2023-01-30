@@ -10,7 +10,7 @@ from core.entities import Token, Pair, MarketInfo, Account
 from core.exchange import SpotExchange
 from core import utils
 from strategies import StrategyBase
-import global_settings
+import mm_bot.global_settings as global_settings
 
 
 def silence_event_loop_closed(func):
@@ -41,6 +41,8 @@ class MarketMaker:
         self._loop = None
         self.logger = utils.setup_custom_logger(__name__)
         self._running = True
+        self._multiple_exchange = len(self.market_infos) > 1
+        self._multiple_account = False
         self.exchange_bases = []
 
         for market_info in self.market_infos:
@@ -82,6 +84,10 @@ class MarketMaker:
         while self._running:
             task_run_exchange = asyncio.create_task(self.exchange_base.run())
             tasks.append(task_run_exchange)
+            task_loop_interval = asyncio.create_task(self._loop_interval())
+            tasks.append(task_loop_interval)
+            # task_run_strategy = asyncio.create_task(self.strategy.run())
+            # tasks.append(task_run_strategy)
             await asyncio.gather(*tasks)
     
     async def _loop_interval(self):
