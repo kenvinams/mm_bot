@@ -1,4 +1,4 @@
-from market_maker import MarketMaker
+from mm_bot import MarketMaker
 
 def main():
     simple_bot = MarketMaker(5)

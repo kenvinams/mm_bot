@@ -1,11 +1,15 @@
 import logging
+<<<<<<< HEAD:core/utils/log.py
 from logging.handlers import TimedRotatingFileHandler
 import global_settings
+=======
+import mm_bot.global_settings as global_settings
+>>>>>>> 403e141150749e423c7081d07c1581d33546b900:mm_bot/core/utils/log.py
 
 loggers = {}
 
 
-def setup_custom_logger(name, log_level=global_settings.LOG_LEVEL, create_file=False):
+def setup_custom_logger(name, log_level=global_settings.LOG_LEVEL):
     if loggers.get(name):
         return loggers[name]
     logger = logging.getLogger(name)

@@ -17,7 +17,7 @@ from core.entities import (
 )
 from core import utils
 from core.exchange.order_manger import OrderManager
-import global_settings
+import mm_bot.global_settings as global_settings
 
 
 class MarketStatus(IntEnum):
@@ -109,7 +109,7 @@ class SpotExchange(IExchange):
         return self._active_spot_orders
 
     @property
-    def time_passed(self):
+    def TIME_PASSED(self):
         return self._time_passed
 
     @property

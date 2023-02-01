@@ -4,7 +4,7 @@ from typing import List
 
 from core.entities import SpotOrder, OrderStatus, Pair
 from core.utils.exception import InsufficientOrdersException
-import global_settings
+import mm_bot.global_settings as global_settings
 
 
 class ActiveStatus(Enum):

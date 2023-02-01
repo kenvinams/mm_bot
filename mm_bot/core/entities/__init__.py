@@ -1,5 +1,6 @@
 from core.entities.account import Account
 from core.entities.inventory import Inventory
+from core.entities.enums import MarketStatus, BasicStatus, ProcessingStatus
 from core.entities.order import TradeSide, OrderStatus, OrderType, SpotOrder
 from core.entities.order_book import OrderBook
 from core.entities.pair import Pair
@@ -20,4 +21,7 @@ __all__ = [
     "Tickers",
     "Token",
     "MarketInfo",
+    "MarketStatus",
+    "BasicStatus",
+    "ProcessingStatus",
 ]

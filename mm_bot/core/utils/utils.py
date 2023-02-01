@@ -2,7 +2,7 @@ import asyncio
 from decimal import Decimal
 from functools import wraps
 
-import global_settings
+import mm_bot.global_settings as global_settings
 
 
 def to_nearest(num, tickSize):

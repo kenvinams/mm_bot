@@ -3,7 +3,7 @@ from typing import List, Tuple
 from core.entities.order_book import OrderBook
 from core.entities.price_state import PriceCandles, Tickers
 from core.entities.token import Token
-import global_settings
+import mm_bot.global_settings as global_settings
 
 
 class Pair:
