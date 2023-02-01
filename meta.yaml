@@ -1,0 +1,15 @@
+resources:
+- name: vm-created-by-deployment-manager
+  properties:
+    disks:
+    - autoDelete: $disks_autoDelete$
+      boot: $disks_boot$
+      deviceName: $disks_deviceName$
+      initializeParams:
+        sourceImage: $disks_initializeParams_sourceImage$
+      type: $disks_type$
+    machineType: $machineType$
+    networkInterfaces:
+    - network: $networkInterfaces_network$
+    zone: $zone$
+  type: compute.v1.instance

@@ -4,6 +4,7 @@ import logging
 from typing import List
 
 from core.exchange import SpotExchange, ProcessingStatus, BasicStatus
+from core.utils import setup_custom_logger
 
 
 class StrategyBase(metaclass=ABCMeta):
@@ -25,17 +26,17 @@ class StrategyBase(metaclass=ABCMeta):
             except (ImportError, AttributeError):
                 raise ValueError(f'No strategy {strategy_name} existed.')
 
-    def run(self):
+    def _run(self):
         logging.basicConfig(filename='orders.log', filemode='a', level=logging.INFO,
                             format='%(asctime)s %(name)s - %(levelname)s - %(message)s')
         while all([exchange_base.EXCHANGE_ENABLED for exchange_base in self.exchange_bases]):
             strategy_ready = [exchange_base.READY_FOR_STRATEGY == BasicStatus.READY for exchange_base in self.exchange_bases]
             if all(strategy_ready):
-                self._run()
+                self.run_strategy()
                 for exchange_base in self.exchange_bases:
                     exchange_base.change_strategy_status()
                     exchange_base.READY_FOR_STRATEGY = BasicStatus.NOT_READY
 
     @abstractmethod
-    def _run(self):
+    def run_strategy(self):
         pass

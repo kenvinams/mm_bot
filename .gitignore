@@ -1,6 +1,7 @@
 *.pyc
 test.py
 spores
+temp.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

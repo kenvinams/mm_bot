@@ -14,7 +14,7 @@ class StrategyCls(StrategyBase):
         self._last_buy_price = 0
         self._last_sell_price = 0
 
-    def _run(self):
+    def run_strategy(self):
         print(self.exchange_base.inventory.get_all_balances)
         # print(self.exchange_base.pair.current_ticker.close)
         # print(self.exchange_base.pair.current_candles.close)

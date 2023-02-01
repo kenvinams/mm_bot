@@ -78,7 +78,7 @@ class StrategyCls(StrategyBase):
     def __init__(self, exchange_bases: List[SpotExchange]):
         super().__init__(exchange_bases)
 
-    def _run(self):
+    def run_strategy(self):
     
         pair = self.exchange_base.pair
         # Cancel all orders
