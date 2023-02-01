@@ -1,7 +1,6 @@
 from abc import ABCMeta
 import asyncio
 import ccxt.async_support as ccxt
-from enum import Enum, IntEnum
 import json
 from typing import List
 import time
@@ -14,27 +13,16 @@ from core.entities import (
     Inventory,
     TradeSide,
     OrderStatus,
+    MarketStatus,
+    BasicStatus,
+    ProcessingStatus
 )
 from core import utils
 from core.exchange.order_manger import OrderManager
 import mm_bot.global_settings as global_settings
 
 
-class MarketStatus(IntEnum):
-    READY = 1
-    NOT_READY = 0
 
-
-class BasicStatus(IntEnum):
-    READY = 1
-    NOT_READY = 0
-
-
-class ProcessingStatus(Enum):
-    INITIALIZING = "INITIALIZING"
-    PROCESSED = "PROCESSED"
-    PROCESSING = "PROCESSING"
-    PROCESSED_ERROR = "PROCESSED_ERROR"
 
 
 class IExchange(metaclass=ABCMeta):

@@ -5,10 +5,10 @@ from core.entities.account import Account
 
 
 class MarketInfo:
-    def __init__(self, exchange_name: str, pairs: List[Pair], account: Account):
+    def __init__(self, exchange_name: str, pairs: List[Pair], accounts: List[Account]):
         self.exchange = exchange_name.upper()
         self.pairs = pairs
-        self.account = account
+        self.accounts = accounts
 
     def add_pair(self, pair: Pair):
         self.pairs.append(pair)
