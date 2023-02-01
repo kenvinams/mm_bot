@@ -5,7 +5,7 @@ import global_settings
 loggers = {}
 
 
-def setup_custom_logger(name, log_level=global_settings.LOG_LEVEL):
+def setup_custom_logger(name, log_level=global_settings.LOG_LEVEL, create_file=False):
     if loggers.get(name):
         return loggers[name]
     logger = logging.getLogger(name)

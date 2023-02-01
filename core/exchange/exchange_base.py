@@ -1,5 +1,4 @@
 from abc import ABCMeta
-from aiohttp import ClientSession
 import asyncio
 import ccxt.async_support as ccxt
 from enum import Enum, IntEnum
@@ -110,7 +109,7 @@ class SpotExchange(IExchange):
         return self._active_spot_orders
 
     @property
-    def TIME_PASSED(self):
+    def time_passed(self):
         return self._time_passed
 
     @property

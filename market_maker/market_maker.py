@@ -41,6 +41,8 @@ class MarketMaker:
         self._loop = None
         self.logger = utils.setup_custom_logger(__name__)
         self._running = True
+        self.multiple_accounts_mode = False
+        self.multiple_exchanges_mode = False
         self.exchange_bases = []
 
         for market_info in self.market_infos:
@@ -59,7 +61,7 @@ class MarketMaker:
             config = yaml.load(f, Loader=SafeLoader)
         res = config.get(str(bot_id))
         if not res:
-            raise ValueError(f"Not with id {bot_id} not found.")
+            raise ValueError(f"Bot id {bot_id} not found.")
         else:
             strat = res["strategy_file"]
             market_infos = []
